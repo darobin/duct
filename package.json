@@ -1,0 +1,13 @@
+{
+    "name":     "duct"
+,   "version":  "0.0.1"
+,   "license": "MIT"
+,   "dependencies": {
+        "nopt":         "2.2.0"
+    ,   "fs-extra":     "0.8.1"
+    ,   "uglify-js":    "2.4.13"
+    }
+,   "bin":  {
+        "duct": "./duct.js"
+    }
+}

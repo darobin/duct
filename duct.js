@@ -74,20 +74,30 @@ if (/\.{2,}|\//.test(profile.name)) err("Bad name: " + profile.name);
 // default output
 if (!options.output) options.output = jn(options.input, name + ".json");
 
-// start with including jquery, because it is always assumed
-output += rfs(jn(resDir, "jquery.min.js"));
+// start with including jquery and promise, because they are always assumed
+output += rfs(jn(resDir, "jquery.min.js")) + "\n";
+output += rfs(jn(resDir, "promise.js")) + "\n";
 
 // include all the modules
-output += "\nfunction () {\n    var modules = {};\n";
+output += "\nfunction () {\n    var modules = {}, resources = {};\n";
 for (var k in profile.modules) {
     output += "    modules['" + k + "'] = function (exports) {\n        " +
               rfs(jn(options.input, profile.modules[k])) +
               "\n        return exports;}({});\n";
 }
 
+for (var k in (profile.resources || {})) {
+    output += "    resources['" + k + "'] = \"" +
+              rfs(jn(options.input, profile.resources[k]))
+                .replace(/[\\"]/g, "\\$&")
+                .replace(/\n/g, "\\n")
+                .replace(/\u0000/g, "\\0") +
+              "\";\n";
+}
+
 // and finally the runner
 output += "    " + rfs(jn(resDir, "module-runner.js")) + "\n";
-output += "    duct(modules, " + JSON.stringify(profile.configuration || {}) + ");\n";
+output += "    duct(modules, resources, " + JSON.stringify(profile.configuration || {}) + ");\n";
 output += "}();\n";
 
 // uglify

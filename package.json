@@ -8,6 +8,6 @@
     ,   "uglify-js":    "2.4.13"
     }
 ,   "bin":  {
-        "duct": "./duct.js"
+        "duct": "./duct-cli.js"
     }
 }

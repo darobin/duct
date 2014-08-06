@@ -13,12 +13,14 @@ var fs = require("fs-extra")
 ,   knownOpts = {
                     "input" :   String
                 ,   "output" :  String
+                ,   "beauty":   Boolean
                 ,   "help":     Boolean
                 ,   "version":  Boolean
                 }
 ,   shortHands = {
                     "i":    ["--input"]
                 ,   "o":    ["--output"]
+                ,   "b":    ["--beauty"]
                 ,   "h":    ["--help"]
                 ,   "v":    ["--version"]
                 }
@@ -26,6 +28,7 @@ var fs = require("fs-extra")
 ,   options = {
         input:      parsed.input || cwd
     ,   output:     parsed.output
+    ,   beauty:     parsed.beauty || false
     ,   help:       parsed.help || false
     ,   version:    parsed.version || false
     }
@@ -45,6 +48,7 @@ if (options.help) {
     ,   "   --input, -i  <directory> that contains the profile.json and dependencies. Defaults to current."
     ,   "   --output, -o <file> to store the generated profile in. Defaults to $name.js in the input"
     ,   "                directory."
+    ,   "   --beauty, -b to prevent minification."
     ,   "   --help, -h to produce this message."
     ,   "   --version, -v to show the version number."
     ,   ""
@@ -72,14 +76,14 @@ if (!profile.modules) err("Missing modules in profile.");
 if (/\.{2,}|\//.test(profile.name)) err("Bad name: " + profile.name);
 
 // default output
-if (!options.output) options.output = jn(options.input, name + ".json");
+if (!options.output) options.output = jn(options.input, profile.name + ".js");
 
 // start with including jquery and promise, because they are always assumed
 output += rfs(jn(resDir, "jquery.min.js")) + "\n";
 output += rfs(jn(resDir, "promise.js")) + "\n";
 
 // include all the modules
-output += "\nfunction () {\n    var modules = {}, resources = {};\n";
+output += "\n(function () {\n    var modules = {}, resources = {};\n";
 for (var k in profile.modules) {
     output += "    modules['" + k + "'] = function (exports) {\n        " +
               rfs(jn(options.input, profile.modules[k])) +
@@ -98,10 +102,10 @@ for (var k in (profile.resources || {})) {
 // and finally the runner
 output += "    " + rfs(jn(resDir, "module-runner.js")) + "\n";
 output += "    duct(modules, resources, " + JSON.stringify(profile.configuration || {}) + ");\n";
-output += "}();\n";
+output += "})();\n";
 
 // uglify
-output = uglify.minify(output, { fromString: true }).code;
+if (!options.beauty) output = uglify.minify(output, { fromString: true }).code;
 
 // write the output
 wfs(options.output, output);
